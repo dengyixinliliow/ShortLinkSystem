@@ -1,0 +1,7 @@
+{
+	"java.configuration.updateBuildConfiguration": "automatic",
+	"maven.executable.path": "/opt/homebrew/bin/mvn",
+	"code-runner.executorMap": {
+		"xml": "cd $dir && /opt/homebrew/bin/mvn clean package"
+	}
+}

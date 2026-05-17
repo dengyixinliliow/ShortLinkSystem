@@ -1,0 +1,30 @@
+# Build output
+target/
+*/target/
+
+# Maven
+.mvn/timing.properties
+
+# IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# VS Code local files
+.vscode/*
+!.vscode/settings.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Runtime/temp files
+*.pid
+*.tmp
+*.swp
