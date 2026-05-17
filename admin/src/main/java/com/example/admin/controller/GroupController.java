@@ -23,25 +23,25 @@ public class GroupController {
 
     private final GroupService groupService;
 
-    @PostMapping("/api/shortlink/v1/group")
+    @PostMapping("/api/shortlink/admin/v1/group")
     public Result<Void> save(@RequestBody GroupSaveReqDTO requestParam) {
         groupService.saveGroup(requestParam);
         return Results.success();
     }
 
-    @PutMapping("/api/shortlink/v1/group")
+    @PutMapping("/api/shortlink/admin/v1/group")
     public Result<Void> update(@RequestBody GroupUpdateReqDTO requestParam) {
         groupService.updateGroup(requestParam);
         return Results.success();
     }
 
-    @DeleteMapping("/api/shortlink/v1/group/{gid}")
+    @DeleteMapping("/api/shortlink/admin/v1/group/{gid}")
     public Result<Void> delete(@PathVariable String gid) {
         groupService.deleteGroup(gid);
         return Results.success();
     }
 
-    @GetMapping("/api/shortlink/v1/group")
+    @GetMapping("/api/shortlink/admin/v1/group")
     public Result<List<GroupRespDTO>> listGroup() {
         return Results.success(groupService.listGroup());
     }

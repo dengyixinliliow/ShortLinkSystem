@@ -27,7 +27,7 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/api/shortlink/v1/user/{username}")
+    @GetMapping("/api/shortlink/admin/v1/user/{username}")
     public Result<UserRespDTO> getUserByUsername(@PathVariable String username) {
         UserRespDTO result = userService.getUserByUsername(username);
         if (result == null) {
@@ -36,34 +36,34 @@ public class UserController {
         return Results.success(result);
     }
 
-    @GetMapping("/api/shortlink/v1/user/has-username/{username}")
+    @GetMapping("/api/shortlink/admin/v1/user/has-username/{username}")
     public Result<Boolean> hasUsername(@PathVariable("username") String username) {
         return Results.success(userService.hasUsername(username));
     }
 
-    @PostMapping("/api/shortlink/v1/user")
+    @PostMapping("/api/shortlink/admin/v1/user")
     public Result<Void> register(@RequestBody UserRegisterReqDTO requestParam) {
         userService.register(requestParam);
         return Results.success();
     }
 
-    @PutMapping("/api/shortlink/v1/user")
+    @PutMapping("/api/shortlink/admin/v1/user")
     public Result<Void> update(@RequestBody UserUpdateReqDTO requestParam) {
         userService.update(requestParam);
         return Results.success();
     }
 
-    @PostMapping("/api/shortlink/v1/user/login")
+    @PostMapping("/api/shortlink/admin/v1/user/login")
     public Result<UserLoginRespDTO> login(@RequestBody UserLoginReqDTO requestParam) {
         return Results.success(userService.login(requestParam));
     }
 
-    @GetMapping("/api/shortlink/v1/user/check-login/{username}")
+    @GetMapping("/api/shortlink/admin/v1/user/check-login/{username}")
     public Result<Boolean> checkLogin(@PathVariable("username") String username) {
         return Results.success(userService.checkLogin(username));
     }
 
-    @DeleteMapping("/api/shortlink/v1/user/logout/{username}")
+    @DeleteMapping("/api/shortlink/admin/v1/user/logout/{username}")
     public Result<Void> logout(@PathVariable("username") String username) {
         userService.logout(username);
         return Results.success();
