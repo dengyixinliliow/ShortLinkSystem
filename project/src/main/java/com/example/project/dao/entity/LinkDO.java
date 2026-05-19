@@ -1,6 +1,7 @@
 package com.example.project.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.example.project.common.database.BaseDO;
@@ -35,5 +36,6 @@ public class LinkDO extends BaseDO {
 
     private LocalDateTime validDate;
 
+    @TableField("`describe`")
     private String describe;
 }
