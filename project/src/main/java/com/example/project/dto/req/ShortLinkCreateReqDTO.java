@@ -11,6 +11,8 @@ public class ShortLinkCreateReqDTO {
 
     private String originUrl;
 
+    private String favicon;
+
     private String gid;
 
     private Integer createdType;

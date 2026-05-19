@@ -3,13 +3,17 @@ package com.example.project.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.project.common.convention.exception.ServiceException;
 import com.example.project.dao.entity.LinkDO;
 import com.example.project.dao.mapper.LinkMapper;
 import com.example.project.dto.req.ShortLinkCreateReqDTO;
+import com.example.project.dto.req.ShortLinkPageReqDTO;
 import com.example.project.dto.resp.ShortLinkCreateRespDTO;
+import com.example.project.dto.resp.ShortLinkPageRespDTO;
 import com.example.project.service.LinkService;
 import com.example.project.util.HashUtil;
 
@@ -40,6 +44,18 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO> implements 
         result.setOriginUrl(requestParam.getOriginUrl());
         result.setGid(requestParam.getGid());
         return result;
+    }
+
+    @Override
+    public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam) {
+        LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
+                .eq(LinkDO::getGid, requestParam.getGid())
+                .eq(LinkDO::getDelFlag, 0)
+                .orderByDesc(LinkDO::getCreateTime);
+        IPage<LinkDO> linkPage = baseMapper.selectPage(
+                new Page<>(requestParam.getCurrent(), requestParam.getSize()),
+                queryWrapper);
+        return linkPage.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
     }
 
     private String generateSuffix(ShortLinkCreateReqDTO requestParam) {

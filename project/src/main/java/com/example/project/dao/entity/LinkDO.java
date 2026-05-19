@@ -24,6 +24,8 @@ public class LinkDO extends BaseDO {
 
     private String originUrl;
 
+    private String favicon;
+
     private Integer clickNum;
 
     private String gid;
