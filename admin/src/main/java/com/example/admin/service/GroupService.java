@@ -12,6 +12,10 @@ public interface GroupService extends IService<GroupDO> {
 
     void saveGroup(GroupSaveReqDTO requestParam);
 
+    void saveGroup(String groupName);
+
+    void saveGroup(String username, String groupName);
+
     void updateGroup(GroupUpdateReqDTO requestParam);
 
     void deleteGroup(String gid);

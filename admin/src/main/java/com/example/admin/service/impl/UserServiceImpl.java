@@ -17,6 +17,7 @@ import com.example.admin.dto.req.UserUpdateReqDTO;
 import com.example.admin.dto.resp.UserLoginRespDTO;
 import com.example.admin.dto.resp.UserRespDTO;
 import com.example.admin.mapper.UserMapper;
+import com.example.admin.service.GroupService;
 import com.example.admin.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBloomFilter;
@@ -35,6 +36,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     private final RedissonClient redissonClient;
 
     private final StringRedisTemplate stringRedisTemplate;
+
+    private final GroupService groupService;
 
     @Override
     public UserRespDTO getUserByUsername(String username) {
@@ -78,6 +81,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
             if (!saveResult) {
                 throw new ServiceException(UserErrorCodeEnum.USER_SAVE_ERROR);
             }
+            groupService.saveGroup(username, "Default");
             userRegisterCachePenetrationBloomFilter.add(username);
         } finally {
             lock.unlock();

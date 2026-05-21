@@ -36,11 +36,26 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         if (requestParam == null || StrUtil.isBlank(requestParam.getGroupName())) {
             throw new ClientException(GroupErrorCodeEnum.GROUP_NAME_NULL);
         }
-        String username = getCurrentUsername();
+        saveGroup(requestParam.getGroupName());
+    }
+
+    @Override
+    public void saveGroup(String groupName) {
+        saveGroup(getCurrentUsername(), groupName);
+    }
+
+    @Override
+    public void saveGroup(String username, String groupName) {
+        if (StrUtil.isBlank(username)) {
+            throw new ClientException(UserErrorCodeEnum.USER_NOT_LOGIN);
+        }
+        if (StrUtil.isBlank(groupName)) {
+            throw new ClientException(GroupErrorCodeEnum.GROUP_NAME_NULL);
+        }
         String gid = generateUniqueGid();
         GroupDO groupDO = new GroupDO();
         groupDO.setGid(gid);
-        groupDO.setName(requestParam.getGroupName());
+        groupDO.setName(groupName);
         groupDO.setUsername(username);
         groupDO.setSortOrder(0);
         save(groupDO);

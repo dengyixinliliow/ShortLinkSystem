@@ -6,6 +6,7 @@ import com.example.admin.remote.ShortLinkRemoteService;
 import com.example.admin.remote.dto.req.ShortLinkCreateReqDTO;
 import com.example.admin.remote.dto.req.ShortLinkGroupCountReqDTO;
 import com.example.admin.remote.dto.req.ShortLinkPageReqDTO;
+import com.example.admin.remote.dto.req.ShortLinkUpdateReqDTO;
 import com.example.admin.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.example.admin.remote.dto.resp.ShortLinkPageRespDTO;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,17 @@ public class ShortLinkRemoteServiceImpl implements ShortLinkRemoteService {
                 HttpMethod.POST,
                 new HttpEntity<>(requestParam),
                 new ParameterizedTypeReference<Result<ShortLinkCreateRespDTO>>() {
+                });
+        return response.getBody();
+    }
+
+    @Override
+    public Result<Void> updateShortLink(ShortLinkUpdateReqDTO requestParam) {
+        ResponseEntity<Result<Void>> response = restTemplate.exchange(
+                projectBaseUrl + "/api/shortlink/v1/update",
+                HttpMethod.PUT,
+                new HttpEntity<>(requestParam),
+                new ParameterizedTypeReference<Result<Void>>() {
                 });
         return response.getBody();
     }
