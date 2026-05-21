@@ -13,14 +13,23 @@ import com.example.admin.dto.req.GroupSaveReqDTO;
 import com.example.admin.dto.req.GroupUpdateReqDTO;
 import com.example.admin.dto.resp.GroupRespDTO;
 import com.example.admin.mapper.GroupMapper;
+import com.example.admin.remote.ShortLinkRemoteService;
+import com.example.admin.remote.dto.req.ShortLinkGroupCountReqDTO;
 import com.example.admin.service.GroupService;
 import com.example.admin.toolkit.RandomGenerator;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements GroupService {
+
+    private final ShortLinkRemoteService shortLinkRemoteService;
 
     @Override
     public void saveGroup(GroupSaveReqDTO requestParam) {
@@ -79,11 +88,19 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
                 .eq(GroupDO::getDelFlag, 0)
                 .eq(GroupDO::getUsername, username)
                 .orderByDesc(GroupDO::getSortOrder, GroupDO::getUpdateTime));
+        ShortLinkGroupCountReqDTO countReqDTO = new ShortLinkGroupCountReqDTO();
+        countReqDTO.setGidList(groupDOList.stream().map(GroupDO::getGid).toList());
+        Map<String, Long> shortLinkCountMap = Optional.ofNullable(shortLinkRemoteService.countShortLinkByGroup(countReqDTO))
+                .map(each -> each.getData())
+                .orElse(Collections.emptyMap());
         return groupDOList.stream()
                 .map(each -> {
                     GroupRespDTO result = new GroupRespDTO();
                     result.setGid(each.getGid());
                     result.setGroupName(each.getName());
+                    result.setShortLinkCount(Optional.ofNullable(shortLinkCountMap.get(each.getGid()))
+                            .map(Long::intValue)
+                            .orElse(0));
                     result.setSortOrder(each.getSortOrder());
                     return result;
                 })

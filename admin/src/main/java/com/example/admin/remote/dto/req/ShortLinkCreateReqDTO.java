@@ -1,4 +1,4 @@
-package com.example.project.dto.req;
+package com.example.admin.remote.dto.req;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;

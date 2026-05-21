@@ -9,5 +9,7 @@ public class GroupRespDTO {
 
     private String groupName;
 
+    private Integer shortLinkCount;
+
     private Integer sortOrder;
 }

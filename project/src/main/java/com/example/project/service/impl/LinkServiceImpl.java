@@ -11,6 +11,7 @@ import com.example.project.common.convention.exception.ServiceException;
 import com.example.project.dao.entity.LinkDO;
 import com.example.project.dao.mapper.LinkMapper;
 import com.example.project.dto.req.ShortLinkCreateReqDTO;
+import com.example.project.dto.req.ShortLinkGroupCountReqDTO;
 import com.example.project.dto.req.ShortLinkPageReqDTO;
 import com.example.project.dto.resp.ShortLinkCreateRespDTO;
 import com.example.project.dto.resp.ShortLinkPageRespDTO;
@@ -20,6 +21,11 @@ import com.example.project.util.HashUtil;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBloomFilter;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -56,6 +62,18 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO> implements 
                 new Page<>(requestParam.getCurrent(), requestParam.getSize()),
                 queryWrapper);
         return linkPage.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
+    }
+
+    @Override
+    public Map<String, Long> countShortLinkByGroup(ShortLinkGroupCountReqDTO requestParam) {
+        return Optional.ofNullable(requestParam.getGidList())
+                .orElse(Collections.emptyList())
+                .stream()
+                .collect(Collectors.toMap(
+                        gid -> gid,
+                        gid -> baseMapper.selectCount(Wrappers.lambdaQuery(LinkDO.class)
+                                .eq(LinkDO::getGid, gid)
+                                .eq(LinkDO::getDelFlag, 0))));
     }
 
     private String generateSuffix(ShortLinkCreateReqDTO requestParam) {

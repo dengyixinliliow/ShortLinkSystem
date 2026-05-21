@@ -3,6 +3,7 @@ package com.example.project.dto.resp;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.Data;
 
@@ -27,6 +28,10 @@ public class ShortLinkPageRespDTO {
 
     private Integer validDateType;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createTime;
+
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime validDate;
 
     @TableField("`describe`")
