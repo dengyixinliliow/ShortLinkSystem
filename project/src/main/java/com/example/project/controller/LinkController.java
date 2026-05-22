@@ -55,7 +55,11 @@ public class LinkController {
     public void restoreUrl(@PathVariable("shortUri") String shortUri,
                            HttpServletRequest request,
                            HttpServletResponse response) throws IOException {
-        String originUrl = linkService.restoreUrl(request.getRequestURL().toString());
-        response.sendRedirect(originUrl);
+        try {
+            String originUrl = linkService.restoreUrl(request.getRequestURL().toString());
+            response.sendRedirect(originUrl);
+        } catch (Exception ex) {
+            response.sendRedirect("/not-found");
+        }
     }
 }
