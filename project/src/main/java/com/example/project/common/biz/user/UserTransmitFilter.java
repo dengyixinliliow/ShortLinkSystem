@@ -1,6 +1,6 @@
-package com.example.admin.common.biz.user;
+package com.example.project.common.biz.user;
 
-import com.example.admin.common.constants.UserConstant;
+import com.example.project.common.constants.UserConstant;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

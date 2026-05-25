@@ -56,7 +56,7 @@ public class LinkController {
                            HttpServletRequest request,
                            HttpServletResponse response) throws IOException {
         try {
-            String originUrl = linkService.restoreUrl(request.getRequestURL().toString());
+            String originUrl = linkService.restoreUrl(request.getRequestURL().toString(), request, response);
             response.sendRedirect(originUrl);
         } catch (Exception ex) {
             response.sendRedirect("/not-found");

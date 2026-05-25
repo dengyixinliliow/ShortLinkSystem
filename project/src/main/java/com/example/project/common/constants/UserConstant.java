@@ -1,4 +1,4 @@
-package com.example.admin.common.constants;
+package com.example.project.common.constants;
 
 public final class UserConstant {
 

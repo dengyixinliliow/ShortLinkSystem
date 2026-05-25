@@ -1,12 +1,12 @@
-package com.example.admin.common.config;
+package com.example.project.common.config;
 
-import com.example.admin.common.biz.user.UserTransmitFilter;
+import com.example.project.common.biz.user.UserTransmitFilter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static com.example.admin.common.constants.UserConstant.USER_TRANSMIT_FILTER_ORDER;
+import static com.example.project.common.constants.UserConstant.USER_TRANSMIT_FILTER_ORDER;
 
 @Configuration
 @ConditionalOnWebApplication

@@ -14,6 +14,7 @@ import com.example.project.common.convention.exception.ServiceException;
 import com.example.project.common.enums.ValidDateTypeEnum;
 import com.example.project.dao.entity.LinkDO;
 import com.example.project.dao.entity.LinkGotoDO;
+import com.example.project.dao.mapper.LinkAccessStatsMapper;
 import com.example.project.dao.mapper.LinkGotoMapper;
 import com.example.project.dao.mapper.LinkMapper;
 import com.example.project.dto.req.ShortLinkCreateReqDTO;
@@ -33,11 +34,17 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collections;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,9 +53,15 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO> implements 
 
     private static final int MAX_GENERATE_COUNT = 10;
 
+    private static final String SHORT_LINK_UV_COOKIE_NAME = "short_link_uv";
+
+    private static final String UNKNOWN_IP = "unknown";
+
     private final RBloomFilter<String> shortUriCreateCachePenetrationBloomFilter;
 
     private final LinkGotoMapper linkGotoMapper;
+
+    private final LinkAccessStatsMapper linkAccessStatsMapper;
 
     private final StringRedisTemplate stringRedisTemplate;
 
@@ -130,13 +143,17 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO> implements 
     }
 
     @Override
-    public String restoreUrl(String fullShortUrl) {
+    public String restoreUrl(String fullShortUrl, HttpServletRequest request, HttpServletResponse response) {
         if (StrUtil.isBlank(fullShortUrl)) {
             throw new ServiceException("Short link cannot be null");
         }
         String cacheKey = String.format(RedisKeyConstant.GOTO_SHORT_LINK_KEY, fullShortUrl);
         String cachedOriginUrl = stringRedisTemplate.opsForValue().get(cacheKey);
         if (StrUtil.isNotBlank(cachedOriginUrl)) {
+            LinkGotoDO linkGotoDO = getLinkGoto(fullShortUrl);
+            if (linkGotoDO != null) {
+                recordAccessStats(fullShortUrl, linkGotoDO.getGid(), request, response);
+            }
             return cachedOriginUrl;
         }
         if (!shortUriCreateCachePenetrationBloomFilter.contains(fullShortUrl)) {
@@ -147,10 +164,13 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO> implements 
         try {
             cachedOriginUrl = stringRedisTemplate.opsForValue().get(cacheKey);
             if (StrUtil.isNotBlank(cachedOriginUrl)) {
+                LinkGotoDO linkGotoDO = getLinkGoto(fullShortUrl);
+                if (linkGotoDO != null) {
+                    recordAccessStats(fullShortUrl, linkGotoDO.getGid(), request, response);
+                }
                 return cachedOriginUrl;
             }
-            LinkGotoDO linkGotoDO = linkGotoMapper.selectOne(Wrappers.lambdaQuery(LinkGotoDO.class)
-                    .eq(LinkGotoDO::getFullShortUrl, fullShortUrl));
+            LinkGotoDO linkGotoDO = getLinkGoto(fullShortUrl);
             if (linkGotoDO == null) {
                 throw new ServiceException("Short link not found");
             }
@@ -167,10 +187,88 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO> implements 
                 throw new ServiceException("Short link not found");
             }
             setShortLinkGotoCache(linkDO);
+            recordAccessStats(fullShortUrl, linkDO.getGid(), request, response);
             return linkDO.getOriginUrl();
         } finally {
             lock.unlock();
         }
+    }
+
+    private LinkGotoDO getLinkGoto(String fullShortUrl) {
+        return linkGotoMapper.selectOne(Wrappers.lambdaQuery(LinkGotoDO.class)
+                .eq(LinkGotoDO::getFullShortUrl, fullShortUrl));
+    }
+
+    private void recordAccessStats(String fullShortUrl, String gid, HttpServletRequest request, HttpServletResponse response) {
+        LocalDateTime now = LocalDateTime.now();
+        Integer uvIncrement = markUvAndGetIncrement(fullShortUrl, now, request, response);
+        Integer uipIncrement = markUipAndGetIncrement(fullShortUrl, now, request);
+        linkAccessStatsMapper.incrementStats(
+                fullShortUrl,
+                gid,
+                LocalDate.from(now),
+                now.getHour(),
+                now.getDayOfWeek().getValue(),
+                uvIncrement,
+                uipIncrement);
+    }
+
+    private Integer markUvAndGetIncrement(String fullShortUrl,
+                                          LocalDateTime now,
+                                          HttpServletRequest request,
+                                          HttpServletResponse response) {
+        String visitorId = getOrCreateVisitorId(request, response);
+        String uvKey = String.format(
+                RedisKeyConstant.SHORT_LINK_STATS_UV_KEY,
+                fullShortUrl,
+                LocalDate.from(now),
+                now.getHour());
+        Boolean firstVisit = stringRedisTemplate.opsForSet().add(uvKey, visitorId) == 1;
+        stringRedisTemplate.expire(uvKey, RedisKeyConstant.SHORT_LINK_STATS_UV_TTL);
+        return Boolean.TRUE.equals(firstVisit) ? 1 : 0;
+    }
+
+    private Integer markUipAndGetIncrement(String fullShortUrl, LocalDateTime now, HttpServletRequest request) {
+        String clientIp = getClientIp(request);
+        String uipKey = String.format(
+                RedisKeyConstant.SHORT_LINK_STATS_UIP_KEY,
+                fullShortUrl,
+                LocalDate.from(now),
+                now.getHour());
+        Boolean firstVisit = stringRedisTemplate.opsForSet().add(uipKey, clientIp) == 1;
+        stringRedisTemplate.expire(uipKey, RedisKeyConstant.SHORT_LINK_STATS_UIP_TTL);
+        return Boolean.TRUE.equals(firstVisit) ? 1 : 0;
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (StrUtil.isNotBlank(forwardedFor) && !UNKNOWN_IP.equalsIgnoreCase(forwardedFor)) {
+            return forwardedFor.split(",")[0].trim();
+        }
+        String realIp = request.getHeader("X-Real-IP");
+        if (StrUtil.isNotBlank(realIp) && !UNKNOWN_IP.equalsIgnoreCase(realIp)) {
+            return realIp;
+        }
+        return request.getRemoteAddr();
+    }
+
+    private String getOrCreateVisitorId(HttpServletRequest request, HttpServletResponse response) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            Optional<Cookie> visitorCookie = Arrays.stream(cookies)
+                    .filter(each -> SHORT_LINK_UV_COOKIE_NAME.equals(each.getName()))
+                    .findFirst();
+            if (visitorCookie.isPresent() && StrUtil.isNotBlank(visitorCookie.get().getValue())) {
+                return visitorCookie.get().getValue();
+            }
+        }
+        String visitorId = UUID.randomUUID().toString();
+        Cookie cookie = new Cookie(SHORT_LINK_UV_COOKIE_NAME, visitorId);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge((int) Duration.ofDays(30).getSeconds());
+        response.addCookie(cookie);
+        return visitorId;
     }
 
     private void setShortLinkGotoCache(LinkDO linkDO) {

@@ -3,4 +3,30 @@ server:
 
 spring:
   application:
-    name: short-link-gateway
+    name: shortlink-gateway
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password: 123456
+  cloud:
+    consul:
+      host: localhost
+      port: 8500
+      discovery:
+        service-name: ${spring.application.name}
+        prefer-ip-address: true
+    gateway:
+      routes:
+        - id: shortlink-admin
+          uri: lb://shortlink-admin
+          predicates:
+            - Path=/api/shortlink/admin/**
+        - id: shortlink-project-api
+          uri: lb://shortlink-project
+          predicates:
+            - Path=/api/shortlink/v1/**
+        - id: shortlink-redirect
+          uri: lb://shortlink-project
+          predicates:
+            - Path=/{shortUri}

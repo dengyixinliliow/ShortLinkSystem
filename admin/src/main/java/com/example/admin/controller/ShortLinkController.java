@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -33,6 +34,14 @@ public class ShortLinkController {
 
     @GetMapping("/api/shortlink/admin/v1/page")
     public Result<Page<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam) {
-        return shortLinkRemoteService.pageShortLink(requestParam);
+        return shortLinkRemoteService.pageShortLink(
+                requestParam.getCurrent(),
+                requestParam.getSize(),
+                requestParam.getGid());
+    }
+
+    @GetMapping("/api/shortlink/admin/v1/title")
+    public Result<String> getTitleByUrl(@RequestParam("fullUrl") String fullUrl) {
+        return shortLinkRemoteService.getTitleByUrl(fullUrl);
     }
 }

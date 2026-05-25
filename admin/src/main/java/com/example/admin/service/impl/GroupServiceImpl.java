@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.admin.common.biz.user.UserContext;
 import com.example.admin.common.convention.exception.ClientException;
+import com.example.admin.common.convention.result.Result;
 import com.example.admin.common.enums.GroupErrorCodeEnum;
 import com.example.admin.common.enums.UserErrorCodeEnum;
 import com.example.admin.dao.entity.GroupDO;
@@ -105,9 +106,12 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
                 .orderByDesc(GroupDO::getSortOrder, GroupDO::getUpdateTime));
         ShortLinkGroupCountReqDTO countReqDTO = new ShortLinkGroupCountReqDTO();
         countReqDTO.setGidList(groupDOList.stream().map(GroupDO::getGid).toList());
-        Map<String, Long> shortLinkCountMap = Optional.ofNullable(shortLinkRemoteService.countShortLinkByGroup(countReqDTO))
-                .map(each -> each.getData())
+        Result<Map<String, Long>> countResult = shortLinkRemoteService.countShortLinkByGroup(countReqDTO);
+        Map<String, Long> shortLinkCountMap = Optional.ofNullable(countResult)
+                .filter(Result::isSuccess)
+                .map(Result::getData)
                 .orElse(Collections.emptyMap());
+
         return groupDOList.stream()
                 .map(each -> {
                     GroupRespDTO result = new GroupRespDTO();

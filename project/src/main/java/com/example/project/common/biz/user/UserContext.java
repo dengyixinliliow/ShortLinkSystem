@@ -1,7 +1,7 @@
-package com.example.admin.common.biz.user;
+package com.example.project.common.biz.user;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
-import com.example.admin.common.constants.UserConstant;
+import com.example.project.common.constants.UserConstant;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
